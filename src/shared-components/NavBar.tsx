@@ -1,12 +1,14 @@
+"use client";
 import React from "react";
 import { CartIcon } from "~/assets/CartIcon";
 import { LeftArrow } from "~/assets/LeftArrow";
 import { RightArrow } from "~/assets/RightArrow";
 import { SearchIcon } from "~/assets/SearchIcon";
-
-import { innerMenu, upperMenu } from "~/utils/constants";
+import { innerMenu, upperMenu } from "~/libs/enums/constants";
+import { userStore } from "~/libs/store/user.store";
 
 const NavBar: React.FC = () => {
+  const user = userStore((state) => state?.user);
   return (
     <>
       <div className="mx-10 flex h-9 items-center justify-end space-x-4">
@@ -15,6 +17,11 @@ const NavBar: React.FC = () => {
             {item}
           </p>
         ))}
+        {user?.name && (
+          <p className="cursor-pointer text-sm font-semibold ">
+            Hi, {user?.name}
+          </p>
+        )}
       </div>
       <div className="mx-10 flex h-16 items-center justify-between">
         <div className="text-2xl font-bold md:text-3xl">ECOMMERCE</div>
