@@ -1,66 +1,93 @@
-// "use client";
+"use client";
 
-// import { useRouter } from "next/navigation";
-// import { useState } from "react";
-
-// import { api } from "~/trpc/react";
-
-// export function CreatePost() {
-//   const router = useRouter();
-//   const [name, setName] = useState("");
-
-//   const createPost = api.post.create.useMutation({
-//     onSuccess: () => {
-//       router.refresh();
-//       setName("");
-//     },
-//   });
-
-//   return (
-//     <form
-//       onSubmit={(e) => {
-//         e.preventDefault();
-//         createPost.mutate({ name });
-//       }}
-//       className="flex flex-col gap-2"
-//     >
-//       <input
-//         type="text"
-//         placeholder="Title"
-//         value={name}
-//         onChange={(e) => setName(e.target.value)}
-//         className="w-full rounded-full px-4 py-2 text-black"
-//       />
-//       <button
-//         type="submit"
-//         className="rounded-full bg-white/10 px-10 py-3 font-semibold transition hover:bg-white/20"
-//         disabled={createPost.isPending}
-//       >
-//         {createPost.isPending ? "Submitting..." : "Submit"}
-//       </button>
-//     </form>
-//   );
-// }
-
-import React from "react";
+import { useRouter } from "next/navigation";
+import React, { useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { API } from "~/libs/config/axios-config";
+import { hideEmail } from "~/libs/utils/utils";
 import Button from "~/shared-components/Button";
+import Loader from "~/shared-components/Loader";
 
-const MAX_PIN_LENGTH = 8;
+const MAX_PIN_LENGTH = 6;
 
-interface VerifyOTPProps {
-  email: string;
-}
+const VerifyOTP: React.FC<{ email: string }> = ({ email }) => {
+  const router = useRouter();
+  const [pin, setPin] = useState<string[]>(
+    Array.from({ length: MAX_PIN_LENGTH }, () => ""),
+  );
+  const inputRefs = useRef<(HTMLInputElement | null)[]>(
+    Array.from({ length: MAX_PIN_LENGTH }, () => null),
+  );
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
-const VerifyOTP: React.FC<VerifyOTPProps> = ({ email }) => {
-  const hideEmail = (email: string) => {
-    const atIndex = email.indexOf("@");
-    if (atIndex !== -1) {
-      const [username, domain] = email.split("@");
-      const hiddenUsername =
-        (username ?? "").slice(0, 3) + "*".repeat((username ?? "").length - 3);
-      return `${hiddenUsername}@${domain}`;
-    } else {
-      return email;
+  const handleInputChange = (index: number, value: string) => {
+    if (value === "" || !isNaN(Number(value))) {
+      const newPin = [...pin];
+      newPin[index] = value;
+      setPin(newPin);
+      if (
+        value !== "" &&
+        index < MAX_PIN_LENGTH - 1 &&
+        inputRefs.current[index + 1]
+      ) {
+        inputRefs.current[index + 1]?.focus();
+      }
+    }
+  };
+
+  const handleBackspace = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (e.key === "Backspace" && index > 0 && pin[index] === "") {
+      const newPin = [...pin];
+      newPin[index - 1] = "";
+      setPin(newPin);
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedData = e.clipboardData.getData("text");
+    if (/^\d+$/.test(pastedData) && pastedData.length <= MAX_PIN_LENGTH) {
+      const newPin = [...pin];
+      for (let i = 0; i < pastedData.length; i++) {
+        newPin[i] = pastedData.charAt(i);
+      }
+      setPin(newPin);
+    }
+  };
+  console.log(pin);
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    if (pin.some((digit) => digit === "")) {
+      setError("Please fill in all digits of the OTP");
+      setLoading(false);
+      return;
+    }
+
+    setError("");
+    try {
+      const otp = pin.join("");
+      const response = await API.post("/verify", { email, otp });
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        setLoading(false);
+        router.push("/login");
+      }
+    } catch (err: any) {
+      switch (err.response.status) {
+        case 401:
+          toast.error(err.response.data.message);
+          break;
+        default:
+          toast.error(
+            "There was an error while verifying OTP. Please Try Again.",
+          );
+      }
+      setLoading(false);
     }
   };
 
@@ -70,12 +97,12 @@ const VerifyOTP: React.FC<VerifyOTPProps> = ({ email }) => {
         Verify your email
       </h2>
       <p className=" text-base font-normal text-black">
-        Enter the 8-digit code you have received on
+        Enter the 6-digit code you have received on
       </p>
       <p className="mb-11 text-base font-medium text-black">
         {hideEmail(email)}
       </p>
-      <form className="flex flex-col  max-md:w-full">
+      <form className="flex flex-col max-md:w-full" onSubmit={handleVerify}>
         <label
           htmlFor="pin_0"
           className="font-regular mb-2 text-base leading-6 text-black"
@@ -86,18 +113,30 @@ const VerifyOTP: React.FC<VerifyOTPProps> = ({ email }) => {
           {Array.from({ length: MAX_PIN_LENGTH }).map((_, index) => (
             <div
               key={index}
-              className="h-10 w-10 rounded border-2 border-gray-300"
+              className={`h-10 w-10 rounded border-2 transition-all duration-300 ease-in-out ${pin[index] ? "border-black" : "border-gray-300"}`}
             >
               <input
+                // @ts-ignore
+                ref={(el) => (inputRefs.current[index] = el)}
                 id={`pin_${index}`}
                 type="text"
+                maxLength={1}
                 className="h-full w-full bg-transparent text-center text-xl outline-none"
+                value={pin[index]}
+                onChange={(e) => handleInputChange(index, e.target.value)}
+                onKeyDown={(e) => handleBackspace(index, e)}
+                onPaste={handlePaste}
+                autoComplete="off"
+                required
               />
+              {error && (
+                <p className="p-2 pb-0 text-sm text-red-500">{error}</p>
+              )}
             </div>
           ))}
         </div>
         <Button className="text-base font-medium uppercase tracking-widest">
-          Verify
+          {loading ? <Loader /> : "Verify"}
         </Button>
       </form>
     </div>
