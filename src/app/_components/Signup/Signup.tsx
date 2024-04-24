@@ -1,82 +1,163 @@
 "use client";
 
 import React, { useState } from "react";
+import { Slide, toast } from "react-toastify";
 import Button from "~/shared-components/Button";
 import { Input, PasswordInput } from "~/shared-components/InputBox";
 import TextLink from "~/shared-components/TextLink";
-import { API } from "~/utils/axios-config";
+import { API } from "~/libs/config/axios-config";
+import useSignupForm from "~/libs/hooks/useSignupForm";
+import Loader from "~/shared-components/Loader";
+import VerifyOTP from "../VerifyOTP/VerifyOTP";
 
 const Signup: React.FC = () => {
-  const [first, setFirst] = useState("");
-  const [second, setSecond] = useState("");
-  const [third, setThird] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [showSignup, setShowSignup] = useState<boolean>(true);
 
-  async function handleSignup(
-    name: string,
-    email: string,
-    password: string,
-    event: any,
-  ) {
-    event.preventDefault();
+  const {
+    register,
+    getValues,
+    handleSubmit,
+    formState: { errors },
+  } = useSignupForm();
+
+  let loadingToast: any;
+
+  const handleSignup = async () => {
+    const { name, email, password } = getValues();
+
     try {
-      const response = await API.post(`/signup`, {
-        name: name,
-        email: email,
-        password: password,
+      setLoading(true);
+      loadingToast = toast.loading("Sending OTP via Email...", {
+        autoClose: false,
+        transition: Slide,
+        theme: "colored",
       });
-      if (response.data.error || response.status !== 200) throw new Error();
-      console.log(response.data.data);
-    } catch (err) {
-      console.error(err);
+      loadingToast;
+      const response = await API.post(`/signup`, {
+        name,
+        email,
+        password,
+      });
+
+      setLoading(false);
+
+      switch (response.status) {
+        case 200:
+          toast.update(loadingToast, {
+            render: `${response.data.message}`,
+            type: "success",
+            isLoading: false,
+            autoClose: 5000,
+            transition: Slide,
+            closeOnClick: true,
+          });
+          setShowSignup(false);
+
+          break;
+      }
+    } catch (err: any) {
+      setLoading(false);
+      switch (err.response.status) {
+        case 400:
+          toast.update(loadingToast, {
+            render: `${err.response.data.message}`,
+            type: "error",
+            isLoading: false,
+            autoClose: 5000,
+            transition: Slide,
+            closeOnClick: true,
+          });
+
+          break;
+        case 409:
+          toast.update(loadingToast, {
+            render: `${err.response.data.message}`,
+            type: "error",
+            isLoading: false,
+            autoClose: 5000,
+            transition: Slide,
+            closeOnClick: true,
+            theme: "colored",
+          });
+          break;
+        default:
+          toast.update(loadingToast, {
+            render:
+              "Try Again. There was an issue while creating your account.",
+            type: "error",
+            isLoading: false,
+            autoClose: 5000,
+            transition: Slide,
+            closeOnClick: true,
+            theme: "colored",
+          });
+      }
     }
-  }
+  };
 
   return (
     <>
-      <div className="mx-auto my-12 flex min-h-[600px] min-w-[550px] flex-col rounded-2xl border border-[#C1C1C1]  px-3 py-10 max-md:w-full max-md:min-w-full">
-        <h2 className="text-center text-3xl font-semibold text-black">
-          Create your account
-        </h2>
+      {showSignup ? (
+        <div className="mx-auto my-12 flex min-h-[600px] min-w-[550px] flex-col rounded-2xl border border-[#C1C1C1]  px-3 py-10 max-md:w-full max-md:min-w-full">
+          <h2 className="text-center text-3xl font-semibold text-black">
+            Create your account
+          </h2>
 
-        <div className="mx-auto mt-10 w-full max-w-sm">
-          <form className="space-y-8">
-            <Input
-              id="name"
-              autoComplete="name"
-              placeholder="Enter your name"
-              label="Name"
-              onChange={(e) => setFirst(e.target.value)}
-              value={first}
-            />
-            <Input
-              id="email"
-              type="text"
-              autoComplete="email"
-              placeholder="Enter your email"
-              label="Email"
-              onChange={(e) => setSecond(e.target.value)}
-              value={second}
-            />
-            <PasswordInput
-              id="password"
-              autoComplete="current-password"
-              placeholder="Add a password"
-              label="Password"
-              onChange={(e) => setThird(e.target.value)}
-              value={third}
-            />
+          <div className="mx-auto mt-10 w-full max-w-sm">
+            <form className="space-y-8" onSubmit={handleSubmit(handleSignup)}>
+              <Input
+                id="name"
+                autoComplete="name"
+                placeholder="Enter your name"
+                label="Name"
+                error={errors.name?.message}
+                {...register("name", {
+                  required: "Name is required",
+                  pattern: {
+                    value: /^[a-zA-Z ]*$/,
+                    message: "Please Enter a Valid Name",
+                  },
+                })}
+              />
+              <Input
+                id="email"
+                type="text"
+                autoComplete="email"
+                placeholder="Enter your email"
+                label="Email"
+                error={errors.email?.message}
+                {...register("email")}
+              />
+              <PasswordInput
+                id="password"
+                autoComplete="new-password"
+                placeholder="Add a password"
+                label="Password"
+                error={errors.password?.message}
+                {...register("password")}
+              />
 
-            <Button
-              className="mt-10 text-base font-medium"
-              onClick={(e) => handleSignup(first, second, third, e)}
-            >
-              CREATE ACCOUNT
-            </Button>
-          </form>
+              {loading ? (
+                <Button className="flex items-center justify-center">
+                  <Loader />
+                  <span className="ml-3">Creating Account</span>
+                </Button>
+              ) : (
+                <Button type="submit">Create Account</Button>
+              )}
+            </form>
 
-          <TextLink href="/" regularText="Have an account?" linkText="LOGIN" />
+            <TextLink
+              href="/login"
+              regularText="Have an account?"
+              linkText="LOGIN"
+            />
+          </div>
         </div>
-      </div>
+      ) : (
+        <VerifyOTP email={getValues()?.email || ""} />
+      )}
     </>
   );
 };
