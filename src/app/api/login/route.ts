@@ -3,7 +3,8 @@ import bcrypt from "bcrypt";
 import { prisma } from "~/db/client";
 import { validateEmail, validatePassword } from "~/libs/utils/utils";
 import jwt from "jsonwebtoken";
-import cookie, { CookieSerializeOptions, serialize } from "cookie";
+import { CookieSerializeOptions, serialize } from "cookie";
+import { TOKEN } from "~/libs/enums/constants";
 
 const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET;
 
@@ -66,14 +67,13 @@ export async function POST(req: NextRequest, res: NextResponse) {
       });
 
       const cookieOptions: CookieSerializeOptions = {
-        httpOnly: process.env.NODE_ENV === "production",
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         maxAge: 3600, // 1 hour expiration
         path: "/",
       };
 
-      const cookieValue = serialize("TOKEN", token, cookieOptions);
+      const cookieValue = serialize(`${TOKEN}`, token, cookieOptions);
       const response = NextResponse.json(
         {
           data: newUser,
