@@ -1,4 +1,4 @@
-export const upperMenu = ["Help", "Orders & Returns", "Hi, John"];
+export const upperMenu = ["Help", "Orders & Returns"];
 
 export const innerMenu = [
   "Categories",
@@ -7,3 +7,5 @@ export const innerMenu = [
   "New Stock",
   "Trending",
 ];
+
+export const TOKEN = "TOKEN";
