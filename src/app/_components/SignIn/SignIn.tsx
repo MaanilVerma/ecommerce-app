@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API } from "~/libs/config/axios-config";
 import useLoginForm from "~/libs/hooks/useLoginForm";
@@ -10,12 +10,14 @@ import Loader from "~/shared-components/Loader";
 import TextLink from "~/shared-components/TextLink";
 import { toast } from "react-toastify";
 import { userStore } from "~/libs/store/user.store";
+import { useResetAllStore } from "~/libs/hooks/useResetStore";
 
 const SignIn: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
 
   const setUser = userStore((state) => state.setUser);
+  const resetStore = useResetAllStore();
 
   const {
     register,
@@ -57,6 +59,9 @@ const SignIn: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    resetStore();
+  }, []);
   return (
     <div className="mx-auto my-12 flex min-h-[600px] w-[550px] flex-col rounded-2xl border border-[#C1C1C1] px-3 py-10 max-md:w-full max-md:min-w-full">
       <div>
