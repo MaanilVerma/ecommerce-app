@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "~/db/client";
+import rateLimitMiddleware from "~/libs/utils/authUtils/ratelimiter";
 import { validateEmail, validateOTP } from "~/libs/utils/utils";
 
 export async function POST(req: NextRequest, res: NextResponse) {
+  const rateLimitResponse = await rateLimitMiddleware(req, res);
+  if (rateLimitResponse.status === 429) {
+    return rateLimitResponse;
+  }
+
   if (req.method === "POST") {
     const { email, otp } = await req.json();
 

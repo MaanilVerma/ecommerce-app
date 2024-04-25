@@ -8,8 +8,14 @@ import {
 } from "~/libs/utils/utils";
 import { sendOtp } from "~/libs/utils/authUtils/sendOTP";
 import { UserDetails } from "~/libs/models/userDetails.model";
+import rateLimitMiddleware from "~/libs/utils/authUtils/ratelimiter";
 
 export async function POST(req: NextRequest, res: NextResponse) {
+  const rateLimitResponse = await rateLimitMiddleware(req, res);
+  if (rateLimitResponse.status === 429) {
+    return rateLimitResponse;
+  }
+
   if (req.method === "POST") {
     const { name, email, password } = await req.json();
 

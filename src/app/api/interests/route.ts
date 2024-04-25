@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { prisma } from "~/db/client";
+import rateLimitMiddleware from "~/libs/utils/authUtils/ratelimiter";
 
 const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET || "";
 
 export async function POST(req: NextRequest, res: NextResponse) {
+  const rateLimitResponse = await rateLimitMiddleware(req, res);
+  if (rateLimitResponse.status === 429) {
+    return rateLimitResponse;
+  }
+
   const authHeader = req.headers.get("Authorization");
   const token = authHeader?.split(" ")[1];
 
@@ -33,15 +39,6 @@ export async function POST(req: NextRequest, res: NextResponse) {
 
       return NextResponse.json(
         { message: "Interest added successfully" },
-        { status: 200 },
-      );
-    } else if (req.method === "DELETE") {
-      await prisma.userSavedInterests.delete({
-        where: { userId_categoryId: { userId, categoryId } },
-      });
-
-      return NextResponse.json(
-        { message: "Interest removed successfully" },
         { status: 200 },
       );
     } else {

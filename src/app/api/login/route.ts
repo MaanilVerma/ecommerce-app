@@ -5,10 +5,16 @@ import { validateEmail, validatePassword } from "~/libs/utils/utils";
 import jwt from "jsonwebtoken";
 import { CookieSerializeOptions, serialize } from "cookie";
 import { TOKEN } from "~/libs/enums/constants";
+import rateLimitMiddleware from "~/libs/utils/authUtils/ratelimiter";
 
 const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET;
 
 export async function POST(req: NextRequest, res: NextResponse) {
+  const rateLimitResponse = await rateLimitMiddleware(req, res);
+  if (rateLimitResponse.status === 429) {
+    return rateLimitResponse;
+  }
+
   if (req.method === "POST") {
     const { email, password } = await req.json();
 
