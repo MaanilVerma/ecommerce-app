@@ -1,11 +1,17 @@
 import React from "react";
 
-const Loader = () => {
+const Loader = ({
+  color = "dark:fill-white",
+  background = "dark:text-gray-600",
+}: {
+  color?: string;
+  background?: string;
+}) => {
   return (
     <div role="status">
       <svg
         aria-hidden="true"
-        className="inline h-8 w-8 animate-spin fill-gray-600 text-gray-200 dark:fill-white dark:text-gray-600"
+        className={`inline h-8 w-8 animate-spin fill-gray-600 text-gray-200 ${color} ${background} `}
         viewBox="0 0 100 101"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
