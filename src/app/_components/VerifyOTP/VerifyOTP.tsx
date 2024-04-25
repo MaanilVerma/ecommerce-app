@@ -58,7 +58,7 @@ const VerifyOTP: React.FC<{ email: string }> = ({ email }) => {
       setPin(newPin);
     }
   };
-  console.log(pin);
+
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
