@@ -1,8 +1,8 @@
-import SignIn from "../_components/SignIn/SignIn";
+import SignIn from "./components/SignIn/SignIn";
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center">
+    <main className="mx-3 flex min-h-screen flex-col items-center">
       <SignIn />
     </main>
   );
