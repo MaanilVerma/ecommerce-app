@@ -9,3 +9,5 @@ export const innerMenu = [
 ];
 
 export const TOKEN = "TOKEN";
+
+export const CATEGORIES_PER_PAGE = 6;
