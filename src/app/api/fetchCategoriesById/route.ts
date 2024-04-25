@@ -27,23 +27,28 @@ export async function GET(req: NextRequest, res: NextResponse) {
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
     const userId = decoded?.id;
 
-    const count = parseInt(req.nextUrl.searchParams.get("count") || "0", 10);
+    const limit = parseInt(req.nextUrl.searchParams.get("limit") || "6", 10);
+    const offset = parseInt(req.nextUrl.searchParams.get("offset") || "0", 10);
 
-    const [allCategories, userSavedInterests] = await Promise.all([
-      prisma.category.findMany(),
+    const [allCategories, userSavedInterests, totalPages] = await Promise.all([
+      prisma.category.findMany({
+        take: Number(limit),
+        skip: Number(offset),
+      }),
       prisma.userSavedInterests.findMany({
         where: {
           userId: userId,
         },
       }),
+      prisma.category.count(),
     ]);
 
     const userLikedCategoryIds = userSavedInterests.map(
       (interest) => interest.categoryId,
     );
     const userLikedCategories = userLikedCategoryIds.map((id) => ({ id }));
-    const totalCount = allCategories.length;
-    const pageCount = Math.ceil(totalCount / Number(count));
+
+    const pageCount = Math.ceil(totalPages / Number(limit));
 
     return NextResponse.json(
       { categories: allCategories, userLikedCategories, pageCount },
