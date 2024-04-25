@@ -10,7 +10,7 @@ import { CategoryDetails } from "~/libs/models/categories.model";
 import { useCategories } from "~/libs/hooks/useCategoryData";
 import { useInterests } from "~/libs/hooks/useInterests";
 
-import Pagination from "./Pagination";
+import PaginationContainer from "./PaginationContainer";
 import Loader from "../Loader";
 import CategoryDetail from "./CategoryDetail";
 
@@ -113,7 +113,7 @@ const CategoryContainer = () => {
             )}
           </div>
           {totalPages > 1 && (
-            <Pagination
+            <PaginationContainer
               totalPages={totalPages}
               currentPage={currentPage}
               onPageChange={handlePageChange}

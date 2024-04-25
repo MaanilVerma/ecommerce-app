@@ -2,7 +2,7 @@ import React from "react";
 import ReactPaginate from "react-paginate";
 import { Pagination } from "~/libs/models/categories.model";
 
-const Pagination: React.FC<Pagination> = ({
+const PaginationContainer: React.FC<Pagination> = ({
   totalPages,
   currentPage,
   onPageChange,
@@ -48,4 +48,4 @@ const Pagination: React.FC<Pagination> = ({
   );
 };
 
-export default Pagination;
+export default PaginationContainer;
