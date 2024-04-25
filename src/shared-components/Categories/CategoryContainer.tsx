@@ -10,9 +10,9 @@ import { CategoryDetails } from "~/libs/models/categories.model";
 import { useCategories } from "~/libs/hooks/useCategoryData";
 import { useInterests } from "~/libs/hooks/useInterests";
 
-import CategoryName from "./CategoryName";
 import Pagination from "./Pagination";
 import Loader from "../Loader";
+import CategoryDetail from "./CategoryDetail";
 
 const CategoryContainer = () => {
   const router = useRouter();
@@ -100,7 +100,7 @@ const CategoryContainer = () => {
               </>
             ) : (
               categories.map((category: CategoryDetails) => (
-                <CategoryName
+                <CategoryDetail
                   key={category?.id}
                   id={category?.id}
                   name={category?.name}

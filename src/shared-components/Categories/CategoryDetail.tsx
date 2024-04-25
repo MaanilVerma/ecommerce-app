@@ -1,7 +1,7 @@
 import React from "react";
 import { CategoryName } from "~/libs/models/categories.model";
 
-const CategoryName: React.FC<CategoryName> = ({
+const CategoryDetail: React.FC<CategoryName> = ({
   id,
   name,
   isSaved,
@@ -27,4 +27,4 @@ const CategoryName: React.FC<CategoryName> = ({
   );
 };
 
-export default CategoryName;
+export default CategoryDetail;
